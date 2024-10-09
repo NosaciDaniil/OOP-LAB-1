@@ -1,0 +1,286 @@
+#include <iostream>
+#include <vector>
+#include <string>
+
+using namespace std;
+
+class Student {
+private:
+    string name;
+    string id;
+    string email;
+    bool isGraduated;
+
+public:
+    // Constructor
+    Student(const string& name, const string& id, const string& email)
+        : name(name), id(id), email(email), isGraduated(false) {}
+
+    // Getters
+    string getName() const { return name; }
+    string getId() const { return id; }
+    string getEmail() const { return email; }
+    bool getGraduationStatus() const { return isGraduated; }
+
+    // Methods
+    void graduate() { isGraduated = true; }
+    bool isEnrolled() const { return !isGraduated; }
+};
+
+class Faculty {
+private:
+    string facultyName;
+    string field;
+    vector<Student> students;
+    vector<Student> graduates;
+
+public:
+    // Constructor
+    Faculty(const string& name, const string& field) : facultyName(name), field(field) {}
+
+    // Methods
+    void addStudent(const Student& student) {
+        students.push_back(student);
+    }
+
+    void graduateStudent(const string& studentId) {
+        for (size_t i = 0; i < students.size(); ++i) {
+            if (students[i].getId() == studentId) {
+                students[i].graduate();
+                graduates.push_back(students[i]);
+                students.erase(students.begin() + i);
+                break;
+            }
+        }
+    }
+
+    bool studentBelongsToFaculty(const string& studentId) const {
+        for (const auto& student : students) {
+            if (student.getId() == studentId) return true;
+        }
+        for (const auto& graduate : graduates) {
+            if (graduate.getId() == studentId) return true;
+        }
+        return false;
+    }
+
+    void displayEnrolledStudents() const {
+        cout << "Enrolled students in " << facultyName << ":\n";
+        for (const auto& student : students) {
+            cout << "Name: " << student.getName() << ", ID: " << student.getId() << ", Email: " << student.getEmail() << endl;
+        }
+    }
+
+    void displayGraduates() const {
+        cout << "Graduated students from " << facultyName << ":\n";
+        for (const auto& graduate : graduates) {
+            cout << "Name: " << graduate.getName() << ", ID: " << graduate.getId() << ", Email: " << graduate.getEmail() << endl;
+        }
+    }
+
+    string getFacultyName() const { return facultyName; }
+    string getField() const { return field; }
+};
+
+class University {
+private:
+    vector<Faculty> faculties;
+
+public:
+    // Methods
+    void addFaculty(const Faculty& faculty) {
+        faculties.push_back(faculty);
+    }
+
+    Faculty* findFacultyByStudentId(const string& studentId) {
+        for (auto& faculty : faculties) {
+            if (faculty.studentBelongsToFaculty(studentId)) {
+                return &faculty;
+            }
+        }
+        return nullptr;
+    }
+
+    void displayAllFaculties() const {
+        cout << "List of faculties at the university:\n";
+        for (const auto& faculty : faculties) {
+            cout << "- " << faculty.getFacultyName() << " (" << faculty.getField() << ")\n";
+        }
+    }
+
+    void displayFacultiesByField(const string& field) const {
+        cout << "Faculties in the field of " << field << ":\n";
+        for (const auto& faculty : faculties) {
+            if (faculty.getField() == field) {
+                cout << "- " << faculty.getFacultyName() << "\n";
+            }
+        }
+    }
+
+    Faculty* findFacultyByName(const string& name) {
+        for (auto& faculty : faculties) {
+            if (faculty.getFacultyName() == name) {
+                return &faculty;
+            }
+        }
+        return nullptr;
+    }
+};
+
+// Function to display the menu
+void displayMenu() {
+    cout << "\nUniversity Student Management System\n";
+    cout << "1. Create and assign a student to a faculty\n";
+    cout << "2. Graduate a student from a faculty\n";
+    cout << "3. Display currently enrolled students\n";
+    cout << "4. Display graduates\n";
+    cout << "5. Check if a student belongs to a specific faculty\n";
+    cout << "6. Create a new faculty\n";
+    cout << "7. Search for the faculty of a student by unique identifier\n";
+    cout << "8. Display all university faculties\n";
+    cout << "9. Display all faculties within a specific field\n";
+    cout << "0. Exit\n";
+}
+
+int main() {
+    University tum;
+    int choice;
+
+    while (true) {
+        displayMenu();
+        cout << "Enter your choice: ";
+        cin >> choice;
+        cin.ignore();  // Clear newline character after numeric input
+
+        switch (choice) {
+        case 1: {
+            string facultyName;
+            cout << "Enter the faculty name: ";
+            getline(cin, facultyName);
+            Faculty* faculty = tum.findFacultyByName(facultyName);
+
+            if (faculty) {
+                string studentName, studentId, email;
+                cout << "Enter student name: ";
+                getline(cin, studentName);
+                cout << "Enter student ID: ";
+                getline(cin, studentId);
+                cout << "Enter student email: ";
+                getline(cin, email);
+
+                Student student(studentName, studentId, email);
+                faculty->addStudent(student);
+                cout << "Student added successfully.\n";
+            } else {
+                cout << "Faculty not found.\n";
+            }
+            break;
+        }
+        case 2: {
+            string facultyName, studentId;
+            cout << "Enter the faculty name: ";
+            getline(cin, facultyName);
+            Faculty* faculty = tum.findFacultyByName(facultyName);
+
+            if (faculty) {
+                cout << "Enter the student ID to graduate: ";
+                getline(cin, studentId);
+                faculty->graduateStudent(studentId);
+                cout << "Student graduated successfully.\n";
+            } else {
+                cout << "Faculty not found.\n";
+            }
+            break;
+        }
+        case 3: {
+            string facultyName;
+            cout << "Enter the faculty name: ";
+            getline(cin, facultyName);
+            Faculty* faculty = tum.findFacultyByName(facultyName);
+
+            if (faculty) {
+                faculty->displayEnrolledStudents();
+            } else {
+                cout << "Faculty not found.\n";
+            }
+            break;
+        }
+        case 4: {
+            string facultyName;
+            cout << "Enter the faculty name: ";
+            getline(cin, facultyName);
+            Faculty* faculty = tum.findFacultyByName(facultyName);
+
+            if (faculty) {
+                faculty->displayGraduates();
+            } else {
+                cout << "Faculty not found.\n";
+            }
+            break;
+        }
+        case 5: {
+            string facultyName, studentId;
+            cout << "Enter the faculty name: ";
+            getline(cin, facultyName);
+            Faculty* faculty = tum.findFacultyByName(facultyName);
+
+            if (faculty) {
+                cout << "Enter the student ID: ";
+                getline(cin, studentId);
+                if (faculty->studentBelongsToFaculty(studentId)) {
+                    cout << "The student belongs to the faculty.\n";
+                } else {
+                    cout << "The student does not belong to the faculty.\n";
+                }
+            } else {
+                cout << "Faculty not found.\n";
+            }
+            break;
+        }
+        case 6: {
+            string facultyName, field;
+            cout << "Enter faculty name: ";
+            getline(cin, facultyName);
+            cout << "Enter faculty field: ";
+            getline(cin, field);
+
+            Faculty faculty(facultyName, field);
+            tum.addFaculty(faculty);
+            cout << "Faculty added successfully.\n";
+            break;
+        }
+        case 7: {
+            string studentId;
+            cout << "Enter the student ID or email to search: ";
+            getline(cin, studentId);
+
+            Faculty* faculty = tum.findFacultyByStudentId(studentId);
+            if (faculty) {
+                cout << "Student belongs to faculty: " << faculty->getFacultyName() << endl;
+            } else {
+                cout << "Student not found.\n";
+            }
+            break;
+        }
+        case 8: {
+            tum.displayAllFaculties();
+            break;
+        }
+        case 9: {
+            string field;
+            cout << "Enter the field to search faculties: ";
+            getline(cin, field);
+
+            tum.displayFacultiesByField(field);
+            break;
+        }
+        case 0:
+            cout << "Exiting program.\n";
+            return 0;
+        default:
+            cout << "Invalid choice. Please try again.\n";
+        }
+    }
+
+    return 0;
+}
