@@ -1,0 +1,22 @@
+#include <iostream>
+using namespace std;
+
+class Box {
+private:
+    int length;
+    
+public:
+    Box(int l) : length(l) {}
+    
+    friend int getLength(Box b);
+};
+
+int getLength(Box b) {
+    return b.length;
+}
+
+int main() {
+    Box b(10);
+    cout << "Length of the box: " << getLength(b) << endl;
+    return 0;
+}
