@@ -12,17 +12,14 @@ private:
     bool isGraduated;
 
 public:
-    // Constructor
     Student(const string& name, const string& id, const string& email)
         : name(name), id(id), email(email), isGraduated(false) {}
 
-    // Getters
     string getName() const { return name; }
     string getId() const { return id; }
     string getEmail() const { return email; }
     bool getGraduationStatus() const { return isGraduated; }
 
-    // Methods
     void graduate() { isGraduated = true; }
     bool isEnrolled() const { return !isGraduated; }
 };
@@ -35,10 +32,8 @@ private:
     vector<Student> graduates;
 
 public:
-    // Constructor
     Faculty(const string& name, const string& field) : facultyName(name), field(field) {}
 
-    // Methods
     void addStudent(const Student& student) {
         students.push_back(student);
     }
@@ -87,7 +82,6 @@ private:
     vector<Faculty> faculties;
 
 public:
-    // Methods
     void addFaculty(const Faculty& faculty) {
         faculties.push_back(faculty);
     }
@@ -127,7 +121,6 @@ public:
     }
 };
 
-// Function to display the menu
 void displayMenu() {
     cout << "\nUniversity Student Management System\n";
     cout << "1. Create and assign a student to a faculty\n";
@@ -150,7 +143,7 @@ int main() {
         displayMenu();
         cout << "Enter your choice: ";
         cin >> choice;
-        cin.ignore();  // Clear newline character after numeric input
+        cin.ignore();
 
         switch (choice) {
         case 1: {
