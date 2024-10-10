@@ -1,0 +1,45 @@
+#include <iostream>
+using namespace std;
+
+class ClassB;
+
+class ClassA {
+private:
+    int valueA;
+    
+public:
+    ClassA(int v) : valueA(v) {}
+    
+    friend class ClassB;
+    
+    void display() const {
+        cout << "Value in ClassA: " << valueA << endl;
+    }
+};
+
+class ClassB {
+private:
+    int valueB;
+    
+public:
+    ClassB(int v) : valueB(v) {}
+    
+    friend void showValues(ClassA a, ClassB b);
+    
+    void display() const {
+        cout << "Value in ClassB: " << valueB << endl;
+    }
+};
+
+void showValues(ClassA a, ClassB b) {
+    cout << "Value in ClassA: " << a.valueA << ", Value in ClassB: " << b.valueB << endl;
+}
+
+int main() {
+    ClassA a(10);
+    ClassB b(20);
+    
+    showValues(a, b);
+    
+    return 0;
+}
