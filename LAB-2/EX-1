@@ -1,0 +1,54 @@
+class Student {
+private:
+    string name;
+    int credits;
+
+public:
+    Student(const string& name, int credits = 0) : name(name), credits(credits) {}
+
+    // Unary operator overloading
+    Student& operator++() {
+        ++credits;
+        return *this;
+    }
+
+    Student operator++(int) {
+        Student temp = *this;
+        ++credits;
+        return temp;
+    }
+
+    Student& operator--() {
+        --credits;
+        return *this;
+    }
+
+    Student operator--(int) {
+        Student temp = *this;
+        --credits;
+        return temp;
+    }
+
+    // Binary operator overloading
+    Student& operator+=(const Student& other) {
+        credits += other.credits;
+        return *this;
+    }
+
+    int getCredits() const { return credits; }
+    void display() const { cout << name << " has " << credits << " credits.\n"; }
+};
+
+int main() {
+    Student s1("Alice", 10), s2("Bob", 15);
+    ++s1;
+    s1.display(); // Alice has 11 credits.
+
+    s2--;
+    s2.display(); // Bob has 14 credits.
+
+    s1 += s2;
+    s1.display(); // Alice has 25 credits.
+
+    return 0;
+}
