@@ -1,0 +1,49 @@
+class Person {
+protected:
+    string name;
+    int age;
+
+public:
+    Person(const string& name, int age) : name(name), age(age) {}
+    void displayPerson() const { cout << "Name: " << name << ", Age: " << age << endl; }
+};
+
+class Student : public Person {
+private:
+    string studentID;
+
+public:
+    Student(const string& name, int age, const string& studentID)
+        : Person(name, age), studentID(studentID) {}
+
+    void displayStudent() const {
+        displayPerson();
+        cout << "Student ID: " << studentID << endl;
+    }
+};
+
+class Employee {
+protected:
+    string employeeID;
+
+public:
+    Employee(const string& employeeID) : employeeID(employeeID) {}
+    void displayEmployee() const { cout << "Employee ID: " << employeeID << endl; }
+};
+
+class StudentEmployee : public Student, public Employee {
+public:
+    StudentEmployee(const string& name, int age, const string& studentID, const string& employeeID)
+        : Student(name, age, studentID), Employee(employeeID) {}
+
+    void displayStudentEmployee() const {
+        displayStudent();
+        displayEmployee();
+    }
+};
+
+int main() {
+    StudentEmployee se("Alice", 21, "S123", "E456");
+    se.displayStudentEmployee();
+    return 0;
+}
