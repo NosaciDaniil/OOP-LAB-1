@@ -1,0 +1,32 @@
+class OperationLogger {
+public:
+    virtual void log(const string& message) = 0;
+    virtual ~OperationLogger() {}
+};
+
+class FileLogger : public OperationLogger {
+public:
+    void log(const string& message) override {
+        cout << "File Logger: " << message << endl; // Placeholder
+    }
+};
+
+class ConsoleLogger : public OperationLogger {
+public:
+    void log(const string& message) override {
+        cout << "Console Logger: " << message << endl;
+    }
+};
+
+int main() {
+    OperationLogger* logger1 = new FileLogger();
+    OperationLogger* logger2 = new ConsoleLogger();
+
+    logger1->log("File log entry.");
+    logger2->log("Console log entry.");
+
+    delete logger1;
+    delete logger2;
+
+    return 0;
+}
