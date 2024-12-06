@@ -1,0 +1,181 @@
+#include <iostream>
+#include <vector>
+#include <memory>
+#include <cstdlib>
+#include <ctime>
+using namespace std;
+
+// Abstract Base Class: EntitateEcosistem
+class EntitateEcosistem {
+protected:
+    string nume;
+    double energie;
+    pair<int, int> pozitie;
+    double rataSupravietuire;
+
+public:
+    EntitateEcosistem(const string& nume, double energie, pair<int, int> pozitie, double rataSupravietuire)
+        : nume(nume), energie(energie), pozitie(pozitie), rataSupravietuire(rataSupravietuire) {}
+
+    virtual void actioneaza() = 0;
+    virtual ~EntitateEcosistem() = default;
+
+    string getNume() const { return nume; }
+    double getEnergie() const { return energie; }
+    pair<int, int> getPozitie() const { return pozitie; }
+
+    void muta(pair<int, int> nouaPozitie) { pozitie = nouaPozitie; }
+    bool esteViu() const { return energie > 0; }
+};
+
+// Class Planta
+class Planta : public EntitateEcosistem {
+public:
+    Planta(const string& nume, double energie, pair<int, int> pozitie)
+        : EntitateEcosistem(nume, energie, pozitie, 1.0) {}
+
+    void actioneaza() override {
+        energie += 5; // Planta creste in energie
+        cout << nume << " creste. Energie: " << energie << endl;
+    }
+
+    shared_ptr<Planta> reproduce() {
+        return make_shared<Planta>(nume + " copil", energie / 2, pozitie);
+    }
+};
+
+// Abstract Class Animal
+class Animal : public EntitateEcosistem {
+protected:
+    double viteza;
+    string tipHrana;
+
+public:
+    Animal(const string& nume, double energie, pair<int, int> pozitie, double rataSupravietuire, double viteza, const string& tipHrana)
+        : EntitateEcosistem(nume, energie, pozitie, rataSupravietuire), viteza(viteza), tipHrana(tipHrana) {}
+
+    virtual void mananca(shared_ptr<EntitateEcosistem> prada) = 0;
+    void deplaseaza(pair<int, int> destinatie) {
+        pozitie = destinatie;
+        energie -= viteza;
+    }
+};
+
+// Subclass Erbivor
+class Erbivor : public Animal {
+public:
+    Erbivor(const string& nume, double energie, pair<int, int> pozitie, double viteza)
+        : Animal(nume, energie, pozitie, 0.8, viteza, "plante") {}
+
+    void mananca(shared_ptr<EntitateEcosistem> prada) override {
+        if (auto planta = dynamic_pointer_cast<Planta>(prada)) {
+            energie += planta->getEnergie();
+            planta->muta({-1, -1}); // Planta este "mancata"
+            cout << nume << " a mancat planta " << planta->getNume() << endl;
+        }
+    }
+
+    void actioneaza() override {
+        energie -= 2; // Consum de energie zilnic
+        cout << nume << " se hraneste. Energie: " << energie << endl;
+    }
+};
+
+// Subclass Carnivor
+class Carnivor : public Animal {
+public:
+    Carnivor(const string& nume, double energie, pair<int, int> pozitie, double viteza)
+        : Animal(nume, energie, pozitie, 0.7, viteza, "animale") {}
+
+    void mananca(shared_ptr<EntitateEcosistem> prada) override {
+        if (auto animal = dynamic_pointer_cast<Animal>(prada)) {
+            energie += animal->getEnergie();
+            animal->muta({-1, -1}); // Animalul este "mancat"
+            cout << nume << " a mancat animalul " << animal->getNume() << endl;
+        }
+    }
+
+    void actioneaza() override {
+        energie -= 3; // Consum de energie zilnic
+        cout << nume << " vaneaza. Energie: " << energie << endl;
+    }
+};
+
+// Subclass Omnivor
+class Omnivor : public Animal {
+public:
+    Omnivor(const string& nume, double energie, pair<int, int> pozitie, double viteza)
+        : Animal(nume, energie, pozitie, 0.9, viteza, "plante si animale") {}
+
+    void mananca(shared_ptr<EntitateEcosistem> prada) override {
+        if (auto planta = dynamic_pointer_cast<Planta>(prada)) {
+            energie += planta->getEnergie();
+            planta->muta({-1, -1});
+            cout << nume << " a mancat planta " << planta->getNume() << endl;
+        } else if (auto animal = dynamic_pointer_cast<Animal>(prada)) {
+            energie += animal->getEnergie();
+            animal->muta({-1, -1});
+            cout << nume << " a mancat animalul " << animal->getNume() << endl;
+        }
+    }
+
+    void actioneaza() override {
+        energie -= 4; // Consum de energie zilnic
+        cout << nume << " cauta hrana. Energie: " << energie << endl;
+    }
+};
+
+// Class Ecosistem
+class Ecosistem {
+private:
+    vector<shared_ptr<EntitateEcosistem>> entitati;
+    int dimensiuneHarta;
+
+public:
+    Ecosistem(int dimensiune) : dimensiuneHarta(dimensiune) {}
+
+    void adaugaEntitate(shared_ptr<EntitateEcosistem> entitate) {
+        entitati.push_back(entitate);
+    }
+
+    void simuleazaPas() {
+        for (auto& entitate : entitati) {
+            if (entitate->esteViu()) {
+                entitate->actioneaza();
+            }
+        }
+    }
+
+    void afiseazaStare() const {
+        for (const auto& entitate : entitati) {
+            if (entitate->esteViu()) {
+                cout << entitate->getNume() << " la pozitia " << entitate->getPozitie().first << ", " << entitate->getPozitie().second << endl;
+            }
+        }
+    }
+};
+
+int main() {
+    srand(time(0));
+
+    Ecosistem ecosistem(10);
+
+    auto planta1 = make_shared<Planta>("Trandafir", 10, make_pair(2, 3));
+    auto erbivor1 = make_shared<Erbivor>("Iepure", 20, make_pair(4, 5), 1.5);
+    auto carnivor1 = make_shared<Carnivor>("Lup", 30, make_pair(6, 7), 2.0);
+    auto omnivor1 = make_shared<Omnivor>("Urs", 40, make_pair(1, 1), 1.8);
+
+    ecosistem.adaugaEntitate(planta1);
+    ecosistem.adaugaEntitate(erbivor1);
+    ecosistem.adaugaEntitate(carnivor1);
+    ecosistem.adaugaEntitate(omnivor1);
+
+    for (int i = 0; i < 5; ++i) {
+        cout << "Simulare pas " << i + 1 << ":" << endl;
+        ecosistem.simuleazaPas();
+        ecosistem.afiseazaStare();
+        cout << endl;
+    }
+
+    return 0;
+}
