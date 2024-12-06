@@ -1,0 +1,31 @@
+class StudentNotFoundException : public exception {
+public:
+    const char* what() const noexcept override { return "Student not found."; }
+};
+
+class InvalidFacultyOperation : public exception {
+public:
+    const char* what() const noexcept override { return "Invalid faculty operation."; }
+};
+
+void findStudentById(const string& id, const vector<Student>& students) {
+    for (const auto& student : students) {
+        if (student.getId() == id) {
+            cout << "Student found: " << student.getName() << endl;
+            return;
+        }
+    }
+    throw StudentNotFoundException();
+}
+
+int main() {
+    vector<Student> students = {Student("Alice", "S123", "alice@example.com")};
+
+    try {
+        findStudentById("S124", students);
+    } catch (const exception& e) {
+        cout << "Error: " << e.what() << endl;
+    }
+
+    return 0;
+}
