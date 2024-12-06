@@ -1,0 +1,194 @@
+#include <iostream>
+#include <fstream>
+#include <string>
+#include <vector>
+#include <map>
+#include <filesystem>
+#include <ctime>
+
+namespace fs = std::filesystem;
+
+// Base class for files
+class File {
+protected:
+    std::string path;
+    std::string filename;
+    std::string extension;
+    std::time_t creation_date;
+    std::time_t last_updated_date;
+
+public:
+    File(const std::string& file_path) : path(file_path) {
+        filename = fs::path(file_path).filename().string();
+        extension = fs::path(file_path).extension().string();
+        creation_date = fs::last_write_time(file_path).time_since_epoch().count();
+        last_updated_date = fs::last_write_time(file_path).time_since_epoch().count();
+    }
+
+    virtual ~File() {}
+
+    virtual void get_info() const {
+        std::cout << "Filename: " << filename << "\n";
+        std::cout << "Extension: " << extension << "\n";
+        std::cout << "Creation Date: " << std::ctime(&creation_date);
+        std::cout << "Last Updated Date: " << std::ctime(&last_updated_date);
+    }
+
+    bool has_changed(std::time_t snapshot_time) const {
+        return last_updated_date > snapshot_time;
+    }
+};
+
+// Derived classes for specific file types
+class TextFile : public File {
+public:
+    TextFile(const std::string& file_path) : File(file_path) {}
+
+    void get_info() const override {
+        File::get_info();
+        std::ifstream file(path);
+        if (file.is_open()) {
+            std::string line;
+            int line_count = 0, word_count = 0, char_count = 0;
+
+            while (std::getline(file, line)) {
+                ++line_count;
+                char_count += line.size();
+                word_count += std::count_if(line.begin(), line.end(), [](char c) { return c == ' '; }) + 1;
+            }
+
+            file.close();
+            std::cout << "Line Count: " << line_count << "\n";
+            std::cout << "Word Count: " << word_count << "\n";
+            std::cout << "Character Count: " << char_count << "\n";
+        }
+    }
+};
+
+class ImageFile : public File {
+public:
+    ImageFile(const std::string& file_path) : File(file_path) {}
+
+    void get_info() const override {
+        File::get_info();
+        std::cout << "Image Dimensions: Unavailable in base C++\n";
+    }
+};
+
+class ProgramFile : public File {
+public:
+    ProgramFile(const std::string& file_path) : File(file_path) {}
+
+    void get_info() const override {
+        File::get_info();
+        std::ifstream file(path);
+        if (file.is_open()) {
+            std::string line;
+            int line_count = 0, class_count = 0, method_count = 0;
+
+            while (std::getline(file, line)) {
+                ++line_count;
+                if (line.find("class ") != std::string::npos) ++class_count;
+                if (line.find("void ") != std::string::npos || line.find("int ") != std::string::npos || line.find("double ") != std::string::npos) ++method_count;
+            }
+
+            file.close();
+            std::cout << "Line Count: " << line_count << "\n";
+            std::cout << "Class Count: " << class_count << "\n";
+            std::cout << "Method Count: " << method_count << "\n";
+        }
+    }
+};
+
+// Factory function for creating file objects
+File* create_file_object(const std::string& file_path) {
+    std::string extension = fs::path(file_path).extension().string();
+    if (extension == ".txt") {
+        return new TextFile(file_path);
+    } else if (extension == ".png" || extension == ".jpg") {
+        return new ImageFile(file_path);
+    } else if (extension == ".cpp" || extension == ".java") {
+        return new ProgramFile(file_path);
+    } else {
+        return new File(file_path);
+    }
+}
+
+// Main program class
+class FolderMonitor {
+private:
+    std::string folder_path;
+    std::time_t snapshot_time;
+    std::map<std::string, File*> files;
+
+    void load_files() {
+        for (const auto& entry : fs::directory_iterator(folder_path)) {
+            files[entry.path().filename().string()] = create_file_object(entry.path().string());
+        }
+    }
+
+public:
+    FolderMonitor(const std::string& path) : folder_path(path), snapshot_time(std::time(nullptr)) {
+        load_files();
+    }
+
+    ~FolderMonitor() {
+        for (auto& [_, file] : files) {
+            delete file;
+        }
+    }
+
+    void commit() {
+        snapshot_time = std::time(nullptr);
+        std::cout << "Snapshot updated.\n";
+    }
+
+    void info(const std::string& filename) const {
+        auto it = files.find(filename);
+        if (it != files.end()) {
+            it->second->get_info();
+        } else {
+            std::cout << "File not found.\n";
+        }
+    }
+
+    void status() const {
+        for (const auto& [filename, file] : files) {
+            std::cout << filename << ": " << (file->has_changed(snapshot_time) ? "Changed" : "Unchanged") << "\n";
+        }
+    }
+
+    void interactive_loop() {
+        std::string command;
+        while (true) {
+            std::cout << "Enter a command (commit, info <filename>, status, exit): ";
+            std::getline(std::cin, command);
+
+            if (command == "commit") {
+                commit();
+            } else if (command.rfind("info ", 0) == 0) {
+                info(command.substr(5));
+            } else if (command == "status") {
+                status();
+            } else if (command == "exit") {
+                std::cout << "Exiting the program.\n";
+                break;
+            } else {
+                std::cout << "Invalid command.\n";
+            }
+        }
+    }
+};
+
+// Example usage
+int main() {
+    std::string folder_path = "./test_folder";  // Replace with your folder path
+    if (!fs::exists(folder_path)) {
+        std::cout << "Folder does not exist.\n";
+    } else {
+        FolderMonitor monitor(folder_path);
+        monitor.interactive_loop();
+    }
+
+    return 0;
+}
