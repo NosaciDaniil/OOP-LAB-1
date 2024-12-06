@@ -1,0 +1,33 @@
+class Person {
+public:
+    virtual string getRole() const = 0; // Pure virtual function
+    virtual ~Person() {}
+};
+
+class Student : public Person {
+public:
+    string getRole() const override { return "Student"; }
+};
+
+class Teacher : public Person {
+public:
+    string getRole() const override { return "Teacher"; }
+};
+
+class Administrator : public Person {
+public:
+    string getRole() const override { return "Administrator"; }
+};
+
+int main() {
+    Person* p1 = new Student();
+    Person* p2 = new Teacher();
+
+    cout << p1->getRole() << endl; // Student
+    cout << p2->getRole() << endl; // Teacher
+
+    delete p1;
+    delete p2;
+
+    return 0;
+}
