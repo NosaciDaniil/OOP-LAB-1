@@ -1,0 +1,50 @@
+class Book {
+private:
+    string title;
+
+public:
+    Book(const string& title) : title(title) {}
+    string getTitle() const { return title; }
+};
+
+class Library {
+private:
+    vector<Book> books;
+
+public:
+    void addBook(const string& title) { books.emplace_back(title); }
+    void displayBooks() const {
+        cout << "Books in the library:\n";
+        for (const auto& book : books) {
+            cout << "- " << book.getTitle() << endl;
+        }
+    }
+};
+
+class Faculty {
+private:
+    vector<Student> students;
+
+public:
+    void addStudent(const Student& student) { students.push_back(student); }
+    void displayStudents() const {
+        cout << "Students in the faculty:\n";
+        for (const auto& student : students) {
+            cout << "- " << student.getName() << endl;
+        }
+    }
+};
+
+int main() {
+    Library library;
+    library.addBook("C++ Programming");
+    library.addBook("Data Structures");
+    library.displayBooks();
+
+    Faculty faculty;
+    faculty.addStudent(Student("Alice", "S123", "alice@example.com"));
+    faculty.addStudent(Student("Bob", "S124", "bob@example.com"));
+    faculty.displayStudents();
+
+    return 0;
+}
