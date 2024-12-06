@@ -1,0 +1,16 @@
+void printRole(const Person* person) {
+    cout << "Role: " << person->getRole() << endl;
+}
+
+int main() {
+    Person* student = new Student();
+    Person* teacher = new Teacher();
+
+    printRole(student); // Role: Student
+    printRole(teacher); // Role: Teacher
+
+    delete student;
+    delete teacher;
+
+    return 0;
+}
