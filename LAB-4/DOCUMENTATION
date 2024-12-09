@@ -1,0 +1,126 @@
+Descrierea proiectului
+Proiectul simulează un ecosistem virtual în care plantele și animalele (erbivore, carnivore, omnivore) interacționează pe o hartă de dimensiune fixă (10x10). Fiecare entitate din ecosistem are comportamente specifice precum reproducerea, hrănirea, deplasarea și eliminarea în caz de moarte.
+
+Descrierea claselor și ierarhiilor
+1. Clasa Abstractă EntitateEcosistem
+Aceasta este baza tuturor entităților (plante și animale). Reprezintă un punct comun de comportament pentru toate subclasele.
+
+Atribute:
+
+string nume: numele entității.
+double energie: energia curentă a entității.
+pair<int, int> pozitie: poziția entității pe hartă.
+double rataSupravietuire: probabilitatea de supraviețuire a entității.
+Metode:
+
+virtual void actioneaza() = 0: metodă abstractă, definită în subclase.
+virtual char simbol() const = 0: returnează un simbol specific entității.
+void muta(pair<int, int> nouaPozitie): mută entitatea pe o nouă poziție.
+bool esteViu() const: verifică dacă entitatea este vie (energie > 0).
+2. Clasa Planta
+Derivată din EntitateEcosistem, reprezintă plantele care cresc și se reproduc.
+
+Atribute moștenite: nume, energie, pozitie, rataSupravietuire.
+Metode:
+void actioneaza() override: crește energia plantei zilnic.
+shared_ptr<Planta> reproduce(): creează o plantă nouă.
+char simbol() const override: returnează simbolul 'P'.
+3. Clasa Abstractă Animal
+Reprezintă un animal generalizat. Este baza pentru erbivore, carnivore și omnivore.
+
+Atribute:
+
+double viteza: viteza de deplasare a animalului.
+string tipHrana: tipul de hrană consumat.
+Metode:
+
+virtual void mananca(shared_ptr<EntitateEcosistem> prada) = 0: metodă pentru consumul de hrană.
+void deplaseaza(pair<int, int> destinatie): mută animalul și reduce energia în funcție de viteză.
+void actioneaza() override: definită în subclase pentru comportamentele specifice.
+4. Clase Derivate din Animal
+Erbivor:
+
+Descriere: Consumă plante.
+Metode:
+void mananca(shared_ptr<EntitateEcosistem> prada) override: consumă energia unei plante.
+void actioneaza() override: scade energia zilnic.
+Carnivor:
+
+Descriere: Vânează alte animale.
+Metode:
+void mananca(shared_ptr<EntitateEcosistem> prada) override: consumă energia unui alt animal.
+void actioneaza() override: scade energia zilnic.
+Omnivor:
+
+Descriere: Consumă atât plante, cât și animale.
+Metode:
+void mananca(shared_ptr<EntitateEcosistem> prada) override: consumă energia din plante sau animale.
+void actioneaza() override: scade energia zilnic.
+5. Clasa Ecosistem
+Gestionează toate entitățile din ecosistem.
+
+Atribute:
+
+vector<shared_ptr<EntitateEcosistem>> entitati: lista tuturor entităților.
+char harta[DIMENSIUNE_HARTA][DIMENSIUNE_HARTA]: matricea reprezentând ecosistemul.
+Metode:
+
+void adaugaEntitate(shared_ptr<EntitateEcosistem> entitate): adaugă o entitate nouă.
+void eliminaEntitate(const string& nume): elimină o entitate după nume.
+void simuleazaPas(): simulează un pas al ecosistemului.
+void initializeazaHarta(): actualizează matricea ecosistemului.
+void afiseazaHarta() const: afișează matricea.
+void afiseazaStare() const: afișează starea tuturor entităților.
+UML Diagram
+plaintext
+Копировать код
+                         +---------------------------+
+                         |     EntitateEcosistem     |
+                         +---------------------------+
+                         | - nume: string            |
+                         | - energie: double         |
+                         | - pozitie: pair<int,int>  |
+                         | - rataSupravietuire: double|
+                         +---------------------------+
+                         | + actioneaza(): void      |
+                         | + simbol(): char          |
+                         +---------------------------+
+                                      ▲
+            +-------------------------+-------------------------+
+            |                         |                         |
+   +--------------------+   +---------------------+  +----------------------+
+   |       Planta        |   |       Animal       |  |        Ecosistem      |
+   +--------------------+   +---------------------+  +----------------------+
+   | + reproduce(): Planta |  | - viteza: double    |  | - entitati: vector  |
+   +--------------------+   | + mananca(): void    |  | - harta: char[][]    |
+                            +---------------------+  +----------------------+
+                            ▲          ▲         ▲
+                  +----------------+ +---------+ +------------+
+                  |    Erbivor     | | Carnivor| |  Omnivor   |
+                  +----------------+ +---------+ +------------+
+Scenarii de utilizare
+Adăugare entități și simulare:
+
+Utilizatorul adaugă o plantă și un erbivor. Ecosistemul le afișează pe hartă.
+Simularea unui pas determină creșterea plantei și scăderea energiei erbivorului.
+Hrănire și eliminare:
+
+Un erbivor se deplasează și mănâncă o plantă.
+Energia plantei este transferată erbivorului, iar planta este eliminată.
+Reproducere:
+
+Plantele se reproduc dacă energia lor depășește un prag specific.
+Dificultăți întâlnite și soluții adoptate
+Problemă: Modificarea listei entitati în timpul iterării.
+
+Soluție: Am folosit un vector temporar pentru a stoca entitățile eliminate și le-am șters după iterare.
+Problemă: Pozițiile invalide ale entităților.
+
+Soluție: Am implementat validarea pozițiilor în timpul adăugării.
+Problemă: Gestionarea relațiilor între clase.
+
+Soluție: Utilizarea pointerilor shared_ptr pentru gestionarea memoriei.
+Problemă: Actualizarea matricei hărții.
+
+Soluție: Reinițializarea matricei după fiecare pas al simulării.
+Acest proiect oferă o simulare flexibilă a ecosistemului, utilizând conceptele de OOP pentru organizare și extindere ușoară.
