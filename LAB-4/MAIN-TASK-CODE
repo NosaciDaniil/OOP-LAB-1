@@ -3,7 +3,10 @@
 #include <memory>
 #include <cstdlib>
 #include <ctime>
+#include <iomanip>
 using namespace std;
+
+const int DIMENSIUNE_HARTA = 10;
 
 // Abstract Base Class: EntitateEcosistem
 class EntitateEcosistem {
@@ -18,6 +21,7 @@ public:
         : nume(nume), energie(energie), pozitie(pozitie), rataSupravietuire(rataSupravietuire) {}
 
     virtual void actioneaza() = 0;
+    virtual char simbol() const = 0;
     virtual ~EntitateEcosistem() = default;
 
     string getNume() const { return nume; }
@@ -36,7 +40,10 @@ public:
 
     void actioneaza() override {
         energie += 5; // Planta creste in energie
-        cout << nume << " creste. Energie: " << energie << endl;
+    }
+
+    char simbol() const override {
+        return 'P';
     }
 
     shared_ptr<Planta> reproduce() {
@@ -71,13 +78,15 @@ public:
         if (auto planta = dynamic_pointer_cast<Planta>(prada)) {
             energie += planta->getEnergie();
             planta->muta({-1, -1}); // Planta este "mancata"
-            cout << nume << " a mancat planta " << planta->getNume() << endl;
         }
     }
 
     void actioneaza() override {
         energie -= 2; // Consum de energie zilnic
-        cout << nume << " se hraneste. Energie: " << energie << endl;
+    }
+
+    char simbol() const override {
+        return 'E';
     }
 };
 
@@ -91,13 +100,15 @@ public:
         if (auto animal = dynamic_pointer_cast<Animal>(prada)) {
             energie += animal->getEnergie();
             animal->muta({-1, -1}); // Animalul este "mancat"
-            cout << nume << " a mancat animalul " << animal->getNume() << endl;
         }
     }
 
     void actioneaza() override {
         energie -= 3; // Consum de energie zilnic
-        cout << nume << " vaneaza. Energie: " << energie << endl;
+    }
+
+    char simbol() const override {
+        return 'C';
     }
 };
 
@@ -111,17 +122,18 @@ public:
         if (auto planta = dynamic_pointer_cast<Planta>(prada)) {
             energie += planta->getEnergie();
             planta->muta({-1, -1});
-            cout << nume << " a mancat planta " << planta->getNume() << endl;
         } else if (auto animal = dynamic_pointer_cast<Animal>(prada)) {
             energie += animal->getEnergie();
             animal->muta({-1, -1});
-            cout << nume << " a mancat animalul " << animal->getNume() << endl;
         }
     }
 
     void actioneaza() override {
         energie -= 4; // Consum de energie zilnic
-        cout << nume << " cauta hrana. Energie: " << energie << endl;
+    }
+
+    char simbol() const override {
+        return 'O';
     }
 };
 
@@ -129,53 +141,140 @@ public:
 class Ecosistem {
 private:
     vector<shared_ptr<EntitateEcosistem>> entitati;
-    int dimensiuneHarta;
+    char harta[DIMENSIUNE_HARTA][DIMENSIUNE_HARTA];
+
+    void initializeazaHarta() {
+        for (int i = 0; i < DIMENSIUNE_HARTA; ++i) {
+            for (int j = 0; j < DIMENSIUNE_HARTA; ++j) {
+                harta[i][j] = '.';
+            }
+        }
+
+        for (const auto& entitate : entitati) {
+            auto poz = entitate->getPozitie();
+            if (poz.first >= 0 && poz.first < DIMENSIUNE_HARTA && poz.second >= 0 && poz.second < DIMENSIUNE_HARTA) {
+                harta[poz.first][poz.second] = entitate->simbol();
+            }
+        }
+    }
 
 public:
-    Ecosistem(int dimensiune) : dimensiuneHarta(dimensiune) {}
+    Ecosistem() {}
 
     void adaugaEntitate(shared_ptr<EntitateEcosistem> entitate) {
         entitati.push_back(entitate);
+    }
+
+    void eliminaEntitate(const string& nume) {
+        entitati.erase(remove_if(entitati.begin(), entitati.end(), [&nume](const shared_ptr<EntitateEcosistem>& entitate) {
+            return entitate->getNume() == nume;
+        }), entitati.end());
     }
 
     void simuleazaPas() {
         for (auto& entitate : entitati) {
             if (entitate->esteViu()) {
                 entitate->actioneaza();
+                auto poz = entitate->getPozitie();
+                if (poz.first >= 0 && poz.first < DIMENSIUNE_HARTA && poz.second >= 0 && poz.second < DIMENSIUNE_HARTA) {
+                    harta[poz.first][poz.second] = entitate->simbol();
+                }
             }
+        }
+        entitati.erase(remove_if(entitati.begin(), entitati.end(),
+            [](const shared_ptr<EntitateEcosistem>& e) { return !e->esteViu(); }), entitati.end());
+        initializeazaHarta();
+    }
+
+    void afiseazaHarta() const {
+        for (int i = 0; i < DIMENSIUNE_HARTA; ++i) {
+            for (int j = 0; j < DIMENSIUNE_HARTA; ++j) {
+                cout << harta[i][j] << " ";
+            }
+            cout << endl;
         }
     }
 
     void afiseazaStare() const {
         for (const auto& entitate : entitati) {
             if (entitate->esteViu()) {
-                cout << entitate->getNume() << " la pozitia " << entitate->getPozitie().first << ", " << entitate->getPozitie().second << endl;
+                cout << entitate->getNume() << " la pozitia " << entitate->getPozitie().first << ", " << entitate->getPozitie().second << " cu energie " << entitate->getEnergie() << endl;
             }
         }
     }
 };
 
-int main() {
-    srand(time(0));
+pair<int, int> pozitieAleatorie(const char harta[DIMENSIUNE_HARTA][DIMENSIUNE_HARTA]) {
+    pair<int, int> poz;
+    do {
+        poz = {rand() % DIMENSIUNE_HARTA, rand() % DIMENSIUNE_HARTA};
+    } while (harta[poz.first][poz
+    ecosistem.adaugaEntitate(omnivor);
 
-    Ecosistem ecosistem(10);
-
-    auto planta1 = make_shared<Planta>("Trandafir", 10, make_pair(2, 3));
-    auto erbivor1 = make_shared<Erbivor>("Iepure", 20, make_pair(4, 5), 1.5);
-    auto carnivor1 = make_shared<Carnivor>("Lup", 30, make_pair(6, 7), 2.0);
-    auto omnivor1 = make_shared<Omnivor>("Urs", 40, make_pair(1, 1), 1.8);
-
-    ecosistem.adaugaEntitate(planta1);
-    ecosistem.adaugaEntitate(erbivor1);
-    ecosistem.adaugaEntitate(carnivor1);
-    ecosistem.adaugaEntitate(omnivor1);
-
-    for (int i = 0; i < 5; ++i) {
-        cout << "Simulare pas " << i + 1 << ":" << endl;
-        ecosistem.simuleazaPas();
+    while (true) {
+        cout << "\n--- Ecosistem ---\n";
+        ecosistem.afiseazaHarta();
         ecosistem.afiseazaStare();
-        cout << endl;
-    }
 
+        cout << "\nOptiuni:\n";
+        cout << "1. Simuleaza un pas\n";
+        cout << "2. Adauga entitate\n";
+        cout << "3. Elimina entitate\n";
+        cout << "4. Iesire\n";
+        cout << "Alege optiunea: ";
+        int optiune;
+        cin >> optiune;
+
+        if (optiune == 1) {
+            ecosistem.simuleazaPas();
+        } else if (optiune == 2) {
+            cout << "Tip entitate (1 - Planta, 2 - Erbivor, 3 - Carnivor, 4 - Omnivor): ";
+            int tip;
+            cin >> tip;
+            cout << "Nume entitate: ";
+            string nume;
+            cin >> nume;
+            cout << "Energie initiala: ";
+            double energie;
+            cin >> energie;
+            pair<int, int> pozitie = make_pair(rand() % DIMENSIUNE_HARTA, rand() % DIMENSIUNE_HARTA);
+
+            if (tip == 1) {
+                ecosistem.adaugaEntitate(make_shared<Planta>(nume, energie, pozitie));
+            } else if (tip == 2) {
+                cout << "Viteza: ";
+                double viteza;
+                cin >> viteza;
+                ecosistem.adaugaEntitate(make_shared<Erbivor>(nume, energie, pozitie, viteza));
+            } else if (tip == 3) {
+                cout << "Viteza: ";
+                double viteza;
+                cin >> viteza;
+                ecosistem.adaugaEntitate(make_shared<Carnivor>(nume, energie, pozitie, viteza));
+            } else if (tip == 4) {
+                cout << "Viteza: ";
+                double viteza;
+                cin >> viteza;
+                ecosistem.adaugaEntitate(make_shared<Omnivor>(nume, energie, pozitie, viteza));
+            } else {
+                cout << "Tip invalid.\n";
+            }
+        } else if (optiune == 3) {
+            cout << "Nume entitate de eliminat: ";
+            string nume;
+            cin >> nume;
+            ecosistem.eliminaEntitate(nume);
+        } else if (optiune == 4) {
+            cout << "Iesire din simulare.\n";
+            break;
+        } else {
+            cout << "Optiune invalida.\n";
+        }
+    }
+}
+
+int main() {
+    srand(static_cast<unsigned int>(time(0)));
+    meniu();
     return 0;
 }
